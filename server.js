@@ -43,6 +43,9 @@ app.use('/api/wallets', recurringRoutes);
 app.use('/api/wallets', budgetRoutes);
 app.use('/api/wallets', goalRoutes);
 
+// Health check / keepalive
+app.get('/api/ping', (req, res) => res.send('ok'));
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
