@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1b2e">
+<title>Vault — Budget Personnel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root,[data-theme="dark"]{
+  --bg:#09090b;--surface:#18181b;--surface2:#27272a;--surface3:#3f3f46;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--text4:#52525b;
+  --accent:#6366f1;--accent2:#818cf8;--accent-bg:rgba(99,102,241,.1);
+  --green:#10b981;--green-bg:rgba(16,185,129,.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.08);
+  --orange:#f59e0b;--orange-bg:rgba(245,158,11,.1);
+  --radius:14px;--radius-sm:10px;--radius-xs:8px;
+  --nav-h:68px;--font:'Inter',system-ui,-apple-system,sans-serif;
+  --card-shadow:none;
+}
+[data-theme="light"]{
+  --bg:#f4f4f5;--surface:#ffffff;--surface2:#e4e4e7;--surface3:#d4d4d8;
+  --border:#e4e4e7;--border2:#d4d4d8;
+  --text:#18181b;--text2:#52525b;--text3:#71717a;--text4:#a1a1aa;
+  --accent:#6366f1;--accent2:#4f46e5;--accent-bg:rgba(99,102,241,.08);
+  --green:#059669;--green-bg:rgba(5,150,105,.08);
+  --red:#dc2626;--red-bg:rgba(220,38,38,.06);
+  --orange:#d97706;--orange-bg:rgba(217,119,6,.08);
+  --card-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;display:flex;justify-content:center;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+#app{width:100%;max-width:480px;min-height:100dvh;padding:20px 20px calc(var(--nav-h) + 28px);position:relative;display:none}
+@media(min-width:520px){body{background:color-mix(in srgb,var(--bg) 90%,black)}#app{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);display:none;align-items:stretch;justify-content:space-around;padding:0 4px;z-index:100;border-top:1px solid var(--border)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.3px;padding:6px 0;cursor:pointer;transition:color .2s;flex:1;text-transform:uppercase}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;transition:all .2s}
+.nav-btn.active{color:var(--accent2)}.nav-btn.active svg{stroke-width:2.2}.nav-btn:active{opacity:.6}
+.page{display:none;animation:fadeIn .25s ease}.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.page-header{margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+.page-header .left{flex:1}.page-header h1{font-size:22px;font-weight:800;letter-spacing:-.4px}
+.page-header .sub{font-size:13px;color:var(--text3);margin-top:4px;font-weight:500}
+.header-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{width:40px;height:40px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.icon-btn:active{opacity:.6;transform:scale(.92)}.icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+.balance-card{background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface));border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--card-shadow)}
+.balance-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%)}
+.balance-card .label{font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.balance-card .amount{font-size:36px;font-weight:800;margin:10px 0 6px;letter-spacing:-1.5px;line-height:1}
+.balance-card .meta{font-size:12px;color:var(--text4);font-weight:500}
+.summary-row{display:flex;gap:10px;margin-bottom:20px}
+.summary-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;box-shadow:var(--card-shadow)}
+.summary-box .s-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.summary-box .s-label .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.summary-box .s-value{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.income-c{color:var(--green)}.expense-c{color:var(--red)}
+.section-label{font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:1px;margin:24px 0 12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--card-shadow)}
+.chart-wrap{position:relative;max-width:200px;margin:0 auto;padding:8px 0}
+.chart-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.chart-center .val{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.chart-center .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.chart-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:16px;justify-content:center}
+.chart-legend .leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:500}
+.chart-legend .leg-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.no-data{text-align:center;padding:28px;color:var(--text4);font-size:13px;font-weight:500}
+.evo-chart-wrap{position:relative;height:180px;margin-top:8px}
+.tx-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;position:relative;overflow:hidden;transition:transform .2s ease;box-shadow:var(--card-shadow)}
+.tx-icon{width:40px;height:40px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;flex-shrink:0}.tx-icon svg{width:18px;height:18px}
+.tx-info{flex:1;min-width:0}.tx-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-cat{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500}
+.tx-right{text-align:right;flex-shrink:0}.tx-amount{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.tx-date{font-size:11px;color:var(--text4);margin-top:2px;font-weight:500}
+.tx-actions{position:absolute;right:0;top:0;bottom:0;display:flex;transform:translateX(100%);transition:transform .25s ease}
+.tx-actions button{width:60px;border:none;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.tx-actions button svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+.tx-actions .tx-edit{background:var(--accent)}.tx-actions .tx-del{background:var(--red)}
+.tx-item.swiped .tx-actions{transform:translateX(0)}.tx-item.swiped{transform:translateX(-120px)}
+.empty{text-align:center;padding:40px 20px;color:var(--text4)}.empty svg{width:48px;height:48px;stroke:var(--text4);margin-bottom:12px}.empty p{font-size:13px;line-height:1.6;font-weight:500}
+.form-group{margin-bottom:20px}.f-label{display:block;font-size:12px;font-weight:600;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.f-input{width:100%;height:50px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:16px;padding:0 16px;outline:none;transition:border-color .2s}
+.f-input:focus{border-color:var(--accent)}.f-input::placeholder{color:var(--text4)}
+.amount-wrap{position:relative}.amount-wrap .currency{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;font-weight:700;color:var(--text3);pointer-events:none}
+.amount-wrap .f-input{padding-left:32px;font-weight:700;font-size:20px}
+.type-toggle{display:flex;gap:8px}
+.type-btn{flex:1;height:50px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text3);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.type-btn svg{width:18px;height:18px}.type-btn.sel-expense{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.type-btn.sel-income{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.cat-grid{display:flex;flex-wrap:wrap;gap:8px}
+.cat-chip{padding:10px 14px;border-radius:var(--radius-xs);font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.cat-chip svg{width:16px;height:16px}.cat-chip.active{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2)}
+.btn-submit{width:100%;height:54px;border:none;border-radius:var(--radius-xs);background:var(--accent);color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:8px;letter-spacing:.2px}
+.btn-submit:active{transform:scale(.98);opacity:.85}
+.rec-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;transition:transform .2s ease;box-shadow:var(--card-shadow)}
+.rec-item .rec-icon{width:40px;height:40px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;flex-shrink:0}.rec-item .rec-icon svg{width:18px;height:18px}
+.rec-info{flex:1;min-width:0}.rec-info .rec-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-info .rec-detail{font-size:11px;color:var(--text3);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:6px}
+.rec-right{text-align:right;flex-shrink:0;display:flex;align-items:center;gap:12px}
+.rec-amount{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.toggle{position:relative;width:44px;height:26px;flex-shrink:0}.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;cursor:pointer;background:var(--surface3);border-radius:13px;transition:.25s}
+.toggle .slider::before{content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
+.toggle input:checked+.slider{background:var(--accent)}.toggle input:checked+.slider::before{transform:translateX(18px)}
+.freq-badge{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;background:var(--surface2);color:var(--text3)}
+.rec-del{position:absolute;right:0;top:0;bottom:0;width:72px;background:var(--red);color:#fff;border:none;font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transform:translateX(100%);transition:transform .25s ease}
+.rec-item.swiped .rec-del{transform:translateX(0)}.rec-item.swiped{transform:translateX(-72px)}
+.rec-form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--card-shadow)}
+.rec-form-card .form-group{margin-bottom:14px}
+.freq-chips{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.freq-chip{padding:12px 0;border-radius:var(--radius-xs);font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;transition:.2s;text-align:center;font-family:var(--font);min-height:48px;display:flex;align-items:center;justify-content:center}
+.freq-chip.active{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2)}
+.day-row{display:flex;gap:8px;align-items:center}.day-row .f-input{flex:1}.day-hint{font-size:11px;color:var(--text4);font-weight:500;flex-shrink:0}
+.btn-add-rec{width:100%;height:48px;border:1px dashed var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--text3);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px}
+.btn-add-rec:active{background:var(--surface);color:var(--accent2)}.btn-add-rec svg{width:18px;height:18px}
+.budget-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:10px;box-shadow:var(--card-shadow)}
+.b-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.b-head .b-icon{width:36px;height:36px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center}.b-head .b-icon svg{width:16px;height:16px}
+.b-head .b-name{flex:1;font-size:14px;font-weight:600}
+.b-head .b-input{width:88px;height:36px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text);font-family:var(--font);font-size:13px;text-align:right;padding:0 10px;outline:none;font-weight:600}
+.b-head .b-input:focus{border-color:var(--accent)}
+.b-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.b-bar .b-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.b-bar .b-fill.g{background:var(--green)}.b-bar .b-fill.o{background:var(--orange)}.b-bar .b-fill.r{background:var(--red)}
+.b-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text4);font-weight:500}.b-meta .spent{font-weight:600}
+.goal-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:10px;box-shadow:var(--card-shadow)}
+.goal-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.goal-head .goal-emoji{font-size:20px;width:36px;height:36px;border-radius:var(--radius-xs);background:var(--accent-bg);display:flex;align-items:center;justify-content:center}
+.goal-head .goal-name{flex:1;font-size:14px;font-weight:600}
+.goal-head .goal-delete{width:32px;height:32px;border:none;background:none;color:var(--text4);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.goal-head .goal-delete:active{background:var(--red-bg);color:var(--red)}
+.goal-head .goal-delete svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.goal-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.goal-bar .goal-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s}
+.goal-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);font-weight:500}.goal-meta .goal-pct{font-weight:700;color:var(--accent2)}
+.goal-add-row{display:flex;gap:8px;margin-bottom:10px}.goal-add-row .f-input{flex:1;height:44px;font-size:14px}
+.goal-add-row button{height:44px;padding:0 16px;border:none;border-radius:var(--radius-xs);background:var(--accent);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.goal-contribute{display:flex;gap:8px;margin-top:8px}
+.goal-contribute .f-input{flex:1;height:38px;font-size:13px;border-radius:var(--radius-xs)}
+.goal-contribute button{height:38px;padding:0 12px;border:none;border-radius:var(--radius-xs);background:var(--green);color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.f-select{height:40px;padding:0 28px 0 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2371717a'%3E%3Cpath d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.search-bar{width:100%;height:44px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text);font-family:var(--font);font-size:14px;padding:0 16px 0 40px;outline:none;transition:border-color .2s;margin-bottom:12px}
+.search-bar:focus{border-color:var(--accent)}.search-bar::placeholder{color:var(--text4)}
+.search-wrap{position:relative}.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--text4);fill:none;stroke-width:1.8;pointer-events:none}
+.export-btn{height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--surface);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.export-btn:active{background:var(--surface2)}.export-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.upcoming-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius-sm);margin-bottom:8px;box-shadow:var(--card-shadow)}
+.upcoming-item .up-info{flex:1;min-width:0}.upcoming-item .up-name{font-size:13px;font-weight:600}
+.upcoming-item .up-date{font-size:11px;color:var(--text4);margin-top:2px;font-weight:500}
+.upcoming-item .up-amount{font-size:14px;font-weight:700;color:var(--red);flex-shrink:0}.upcoming-item .up-amount.income-c{color:var(--green)}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);max-width:440px;width:calc(100% - 40px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:14px 20px;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:600;z-index:999;transition:.3s;opacity:0;display:flex;align-items:center;gap:10px}
+.toast svg{width:18px;height:18px;flex-shrink:0}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok svg{stroke:var(--green)}.toast.err svg{stroke:var(--red)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--surface);border-top:1px solid var(--border2);border-radius:var(--radius) var(--radius) 0 0;padding:28px 24px 36px;width:100%;max-width:480px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.modal-box h3{font-size:17px;font-weight:700;margin-bottom:6px}.modal-box p{font-size:13px;color:var(--text3);margin-bottom:20px;line-height:1.5}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;height:48px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.modal-btns button:active{transform:scale(.96)}
+.m-cancel{background:var(--surface2);color:var(--text)}.m-danger{background:var(--red);color:#fff}.m-accent{background:var(--accent);color:#fff}
+.modal-box .form-group{margin-bottom:14px}
+.settings-group{margin-bottom:20px}.settings-group .sg-title{font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}.settings-row:last-child{border:none}
+.settings-row .sr-label{font-size:14px;font-weight:600}.settings-row .sr-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.settings-row button{height:36px;padding:0 14px;border:1px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer}
+.settings-row button:active{opacity:.7}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+
+/* ===== AUTH SCREEN ===== */
+.auth-screen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.auth-screen.hidden{display:none}
+.auth-screen h2{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.auth-tabs{display:flex;gap:0;background:var(--surface);border-radius:var(--radius-xs);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
+.auth-tab{padding:10px 24px;font-family:var(--font);font-size:13px;font-weight:700;border:none;background:none;color:var(--text3);cursor:pointer;transition:.2s}
+.auth-tab.active{background:var(--accent);color:#fff}
+.auth-input{width:260px;height:50px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:16px;padding:0 16px;outline:none;text-align:center;transition:border-color .2s}
+.auth-input:focus{border-color:var(--accent)}.auth-input::placeholder{color:var(--text4)}
+.auth-error{font-size:12px;color:var(--red);font-weight:600;min-height:18px}
+.pin-dots{display:flex;gap:16px}
+.pin-dots .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--text3);transition:.2s}
+.pin-dots .dot.filled{background:var(--accent);border-color:var(--accent)}.pin-dots .dot.error{border-color:var(--red);background:var(--red)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;margin-top:8px}
+.pin-key{width:72px;height:72px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:var(--font);font-size:24px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.pin-key:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pin-key.empty{visibility:hidden}.pin-key svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ===== WALLET HEADER ===== */
+.wallet-header{display:flex;align-items:center;gap:10px}
+.wallet-header h1{font-size:22px;font-weight:800;letter-spacing:-.4px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wallet-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.wallet-badge.solo{background:var(--accent-bg);color:var(--accent2)}
+.wallet-badge.shared{background:var(--green-bg);color:var(--green)}
+.wallet-badge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ===== WALLET LIST (settings) ===== */
+.wallet-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.wallet-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:.2s}
+.wallet-card:active{transform:scale(.98)}
+.wallet-card.active{border-color:var(--accent);background:var(--accent-bg)}
+.wallet-card .wc-icon{width:40px;height:40px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wallet-card .wc-icon.solo{background:var(--accent-bg);color:var(--accent2)}
+.wallet-card .wc-icon.shared{background:var(--green-bg);color:var(--green)}
+.wallet-card .wc-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+.wallet-card .wc-info{flex:1;min-width:0}
+.wallet-card .wc-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wallet-card .wc-meta{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500;display:flex;align-items:center;gap:6px}
+.wallet-card .wc-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s}
+.wallet-card.active .wc-check{border-color:var(--accent);background:var(--accent)}
+.wallet-card.active .wc-check svg{stroke:#fff}
+.wallet-card .wc-check svg{width:14px;height:14px;stroke:transparent;fill:none;stroke-width:2.5}
+.btn-new-wallet{width:100%;height:44px;border:1px dashed var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--text3);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-new-wallet:active{background:var(--accent-bg);color:var(--accent2);border-color:var(--accent)}
+.btn-new-wallet svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ===== CALENDAR ===== */
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-header span{text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px}
+.cal-day{min-height:40px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px;text-align:center;font-size:11px;color:var(--text3);font-weight:500;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cal-day:hover{border-color:var(--accent)}
+.cal-day.today{border-color:var(--accent);background:var(--accent-bg)}
+.cal-day.empty{background:none;border-color:transparent;cursor:default}
+.cal-day.empty:hover{border-color:transparent}
+.cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.cal-dot{width:6px;height:6px;border-radius:50%}
+.cal-tooltip{position:fixed;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:10px 14px;z-index:150;font-size:12px;max-width:200px;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.cal-tooltip.show{display:block}
+.cal-tooltip .ct-item{padding:3px 0;display:flex;justify-content:space-between;gap:12px}
+.cal-tooltip .ct-name{font-weight:600}.cal-tooltip .ct-amount{font-weight:700}
+
+/* ===== MIGRATION BANNER ===== */
+.migration-banner{background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;display:none}
+.migration-banner.show{display:block}
+.migration-banner p{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:500}
+.migration-banner .mb-actions{display:flex;gap:8px}
+.migration-banner button{height:36px;padding:0 16px;border:none;border-radius:var(--radius-xs);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.mb-import{background:var(--accent);color:#fff}.mb-dismiss{background:var(--surface2);color:var(--text2)}
+
+/* ===== MEMBERS ===== */
+.member-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.member-item:last-child{border:none}
+.member-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent-bg);color:var(--accent2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.member-name{flex:1;font-size:14px;font-weight:600}
+.member-role{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase}
+.member-remove{width:28px;height:28px;border:none;background:none;color:var(--text4);cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.member-remove:active{background:var(--red-bg);color:var(--red)}
+.member-remove svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <h2>Vault</h2>
+  <div class="auth-tabs">
+    <button class="auth-tab active" data-auth="login">Connexion</button>
+    <button class="auth-tab" data-auth="register">Inscription</button>
+  </div>
+  <input class="auth-input" type="text" id="auth-username" placeholder="Nom d'utilisateur" autocomplete="username" maxlength="20">
+  <div style="font-size:13px;color:var(--text3);font-weight:500" id="auth-pin-label">Entrez votre PIN</div>
+  <div class="pin-dots" id="auth-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  <div class="pin-pad" id="auth-pad">
+    <button class="pin-key" data-k="1">1</button><button class="pin-key" data-k="2">2</button><button class="pin-key" data-k="3">3</button>
+    <button class="pin-key" data-k="4">4</button><button class="pin-key" data-k="5">5</button><button class="pin-key" data-k="6">6</button>
+    <button class="pin-key" data-k="7">7</button><button class="pin-key" data-k="8">8</button><button class="pin-key" data-k="9">9</button>
+    <button class="pin-key empty"></button><button class="pin-key" data-k="0">0</button>
+    <button class="pin-key" data-k="del"><svg viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button>
+  </div>
+  <div class="auth-error" id="auth-error"></div>
+</div>
+
+<div id="app">
+  <!-- MIGRATION BANNER -->
+  <div class="migration-banner" id="migration-banner">
+    <p>Des donn&eacute;es locales ont &eacute;t&eacute; d&eacute;tect&eacute;es sur cet appareil. Voulez-vous les importer dans votre wallet ?</p>
+    <div class="mb-actions">
+      <button class="mb-import" id="btn-migrate">Importer</button>
+      <button class="mb-dismiss" id="btn-dismiss-migrate">Ignorer</button>
+    </div>
+  </div>
+
+  <!-- PAGE: HOME -->
+  <div class="page active" id="page-home">
+    <div class="page-header">
+      <div class="left">
+        <div class="wallet-header">
+          <h1 id="wallet-title">Vault</h1>
+          <span class="wallet-badge solo" id="wallet-badge"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Solo</span>
+        </div>
+        <div class="sub" id="home-month"></div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-theme" title="Th&egrave;me"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg></button>
+        <button class="icon-btn" id="btn-settings" title="R&eacute;glages"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <div class="balance-card">
+      <div class="label">Solde progressif</div>
+      <div class="amount" id="balance">0,00 &euro;</div>
+      <div class="meta" id="balance-meta"></div>
+    </div>
+    <div class="summary-row">
+      <div class="summary-box"><div class="s-label"><span class="dot" style="background:var(--green)"></span>Revenus</div><div class="s-value income-c" id="total-income">0,00 &euro;</div></div>
+      <div class="summary-box"><div class="s-label"><span class="dot" style="background:var(--red)"></span>D&eacute;penses</div><div class="s-value expense-c" id="total-expense">0,00 &euro;</div></div>
+    </div>
+    <div class="section-label">R&eacute;partition</div>
+    <div class="card">
+      <div class="chart-wrap" id="chart-wrap"><canvas id="donut"></canvas><div class="chart-center"><div class="val" id="chart-val">0 &euro;</div><div class="lbl">Total</div></div></div>
+      <div class="chart-legend" id="chart-legend"></div>
+      <div class="no-data" id="no-chart" style="display:none">Aucune d&eacute;pense ce mois</div>
+    </div>
+    <div class="section-label">Solde progressif du mois</div>
+    <div class="card"><div class="evo-chart-wrap"><canvas id="evo-chart"></canvas></div></div>
+    <div class="section-label" id="upcoming-label" style="display:none">Prochains pr&eacute;l&egrave;vements</div>
+    <div id="upcoming-list"></div>
+    <div class="section-label">R&eacute;cent</div>
+    <div id="recent-list"></div>
+  </div>
+
+  <!-- PAGE: ADD -->
+  <div class="page" id="page-add">
+    <div class="page-header"><div class="left"><h1>Nouvelle transaction</h1><div class="sub">Enregistrez un mouvement</div></div></div>
+    <div class="form-group"><label class="f-label">Type</label><div class="type-toggle">
+      <button class="type-btn sel-expense" id="btn-expense"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>D&eacute;pense</button>
+      <button class="type-btn" id="btn-income"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Revenu</button>
+    </div></div>
+    <div class="form-group"><label class="f-label">Libell&eacute;</label><input class="f-input" type="text" id="tx-name" placeholder="Ex: Courses Carrefour" autocomplete="off"></div>
+    <div class="form-group"><label class="f-label">Montant</label><div class="amount-wrap"><span class="currency">&euro;</span><input class="f-input" type="number" id="tx-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div></div>
+    <div class="form-group"><label class="f-label">Cat&eacute;gorie</label><div class="cat-grid" id="cat-chips"></div></div>
+    <div class="form-group"><label class="f-label">Date</label><input class="f-input" type="date" id="tx-date"></div>
+    <button class="btn-submit" id="btn-add">Enregistrer</button>
+  </div>
+
+  <!-- PAGE: RECURRING -->
+  <div class="page" id="page-recurring">
+    <div class="page-header"><div class="left"><h1>R&eacute;currents</h1><div class="sub">Pr&eacute;l&egrave;vements automatiques</div></div></div>
+    <div class="section-label">Calendrier du mois</div>
+    <div class="card" id="cal-card">
+      <div class="cal-header"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <button class="btn-add-rec" id="btn-show-rec-form"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8m-4-4h8"/></svg>Ajouter un pr&eacute;l&egrave;vement</button>
+    <div class="rec-form-card" id="rec-form" style="display:none">
+      <div class="form-group"><label class="f-label">Type</label><div class="type-toggle">
+        <button class="type-btn sel-expense" id="rec-btn-expense"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Pr&eacute;l&egrave;vement</button>
+        <button class="type-btn" id="rec-btn-income"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Virement</button>
+      </div></div>
+      <div class="form-group"><label class="f-label">Libell&eacute;</label><input class="f-input" type="text" id="rec-name" placeholder="Ex: Loyer, Netflix..." autocomplete="off"></div>
+      <div class="form-group"><label class="f-label">Montant</label><div class="amount-wrap"><span class="currency">&euro;</span><input class="f-input" type="number" id="rec-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div></div>
+      <div class="form-group"><label class="f-label">Cat&eacute;gorie</label><div class="cat-grid" id="rec-cat-chips"></div></div>
+      <div class="form-group"><label class="f-label">Fr&eacute;quence</label><div class="freq-chips">
+        <button class="freq-chip active" data-freq="monthly">Mensuel</button><button class="freq-chip" data-freq="weekly">Hebdo</button><button class="freq-chip" data-freq="yearly">Annuel</button>
+      </div></div>
+      <div class="form-group" id="rec-day-group"><label class="f-label">Jour du mois</label><div class="day-row"><input class="f-input" type="number" id="rec-day" min="1" max="31" value="1" inputmode="numeric"><span class="day-hint">1 &agrave; 31</span></div></div>
+      <button class="btn-submit" id="btn-save-rec">Enregistrer le pr&eacute;l&egrave;vement</button>
+    </div>
+    <div class="section-label">Pr&eacute;l&egrave;vements actifs</div>
+    <div id="rec-list"></div>
+  </div>
+
+  <!-- PAGE: BUDGET -->
+  <div class="page" id="page-budget">
+    <div class="page-header"><div class="left"><h1>Budgets</h1><div class="sub">Limites et objectifs</div></div></div>
+    <div class="section-label">Limites par cat&eacute;gorie</div>
+    <div id="budget-list"></div>
+    <div class="section-label">Objectifs d'&eacute;pargne</div>
+    <div class="goal-add-row">
+      <input class="f-input" type="text" id="goal-name" placeholder="Nom (ex: Vacances)">
+      <input class="f-input" type="number" id="goal-target" placeholder="Objectif" inputmode="decimal" style="max-width:100px">
+      <button id="btn-add-goal">+</button>
+    </div>
+    <div id="goals-list"></div>
+  </div>
+
+  <!-- PAGE: HISTORY -->
+  <div class="page" id="page-history">
+    <div class="page-header"><div class="left"><h1>Historique</h1><div class="sub">Toutes les transactions</div></div></div>
+    <div class="search-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-bar" type="text" id="search-input" placeholder="Rechercher..."></div>
+    <div class="filters">
+      <select class="f-select" id="filter-month"></select>
+      <select class="f-select" id="filter-type"><option value="all">Tous types</option><option value="expense">D&eacute;penses</option><option value="income">Revenus</option></select>
+      <select class="f-select" id="filter-cat"><option value="all">Toutes cat.</option></select>
+      <button class="export-btn" id="btn-export"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" data-page="home"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>Accueil</button>
+    <button class="nav-btn" data-page="add"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8m-4-4h8"/></svg>Ajouter</button>
+    <button class="nav-btn" data-page="recurring"><svg viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>R&eacute;currents</button>
+    <button class="nav-btn" data-page="budget"><svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Budget</button>
+    <button class="nav-btn" data-page="history"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+  </nav>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span id="toast-msg"></span></div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <h3 id="modal-title">Supprimer ?</h3>
+    <p id="modal-desc">Cette action est irr&eacute;versible.</p>
+    <div class="modal-btns"><button class="m-cancel" id="modal-cancel">Annuler</button><button class="m-danger" id="modal-confirm">Supprimer</button></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box">
+    <h3>Modifier la transaction</h3>
+    <div class="form-group"><label class="f-label">Libell&eacute;</label><input class="f-input" type="text" id="edit-name"></div>
+    <div class="form-group"><label class="f-label">Montant</label><div class="amount-wrap"><span class="currency">&euro;</span><input class="f-input" type="number" id="edit-amount" min="0" step="0.01" inputmode="decimal"></div></div>
+    <div class="form-group"><label class="f-label">Date</label><input class="f-input" type="date" id="edit-date"></div>
+    <div class="modal-btns"><button class="m-cancel" id="edit-cancel">Annuler</button><button class="m-accent" id="edit-save">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-box" style="max-height:85vh;overflow-y:auto">
+    <h3>R&eacute;glages</h3>
+    <p>Gestion des wallets et du compte</p>
+    <div class="settings-group">
+      <div class="sg-title">Mes wallets</div>
+      <div class="wallet-list" id="settings-wallet-list"></div>
+      <button class="btn-new-wallet" id="btn-add-wallet"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8m-4-4h8"/></svg>Nouveau wallet</button>
+    </div>
+    <div class="settings-group">
+      <div class="sg-title">Wallet actif</div>
+      <div class="settings-row"><div><div class="sr-label">Renommer</div><div class="sr-desc" id="wallet-name-display">Mon Budget</div></div><button id="btn-rename-wallet">Renommer</button></div>
+      <div class="settings-row"><div><div class="sr-label">Membres</div><div class="sr-desc" id="members-count">1 membre</div></div><button id="btn-manage-members">G&eacute;rer</button></div>
+      <div class="settings-row"><div><div class="sr-label">Inviter</div><div class="sr-desc">Partager ce wallet</div></div><button id="btn-invite">Inviter</button></div>
+    </div>
+    <div class="settings-group">
+      <div class="sg-title">Donn&eacute;es</div>
+      <div class="settings-row"><div><div class="sr-label">Sauvegarder</div><div class="sr-desc">Exporter en JSON</div></div><button id="btn-backup">Exporter</button></div>
+      <div class="settings-row"><div><div class="sr-label" style="color:var(--red)">Supprimer wallet</div><div class="sr-desc">Supprime le wallet et ses donn&eacute;es</div></div><button id="btn-delete-wallet" style="color:var(--red);border-color:var(--red)">Supprimer</button></div>
+    </div>
+    <div class="settings-group">
+      <div class="sg-title">Compte</div>
+      <div class="settings-row"><div><div class="sr-label">Connect&eacute; en tant que</div><div class="sr-desc" id="user-display">-</div></div><button id="btn-logout" style="color:var(--red);border-color:var(--red)">D&eacute;connexion</button></div>
+    </div>
+    <div class="modal-btns" style="margin-top:8px"><button class="m-cancel" id="settings-close" style="flex:1">Fermer</button></div>
+  </div>
+</div>
+
+<!-- INVITE MODAL -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal-box">
+    <h3>Inviter un utilisateur</h3>
+    <p>Entrez le nom d'utilisateur &agrave; ajouter au wallet</p>
+    <div class="form-group"><input class="f-input" type="text" id="invite-username" placeholder="Nom d'utilisateur" autocomplete="off"></div>
+    <div class="modal-btns"><button class="m-cancel" id="invite-cancel">Annuler</button><button class="m-accent" id="invite-confirm">Inviter</button></div>
+  </div>
+</div>
+
+<!-- MEMBERS MODAL -->
+<div class="modal-overlay" id="members-modal">
+  <div class="modal-box">
+    <h3>Membres du wallet</h3>
+    <p id="members-wallet-name"></p>
+    <div id="members-list"></div>
+    <div class="modal-btns" style="margin-top:12px"><button class="m-cancel" id="members-close" style="flex:1">Fermer</button></div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-overlay" id="rename-modal">
+  <div class="modal-box">
+    <h3>Renommer le wallet</h3>
+    <div class="form-group"><input class="f-input" type="text" id="rename-input" placeholder="Nouveau nom" autocomplete="off"></div>
+    <div class="modal-btns"><button class="m-cancel" id="rename-cancel">Annuler</button><button class="m-accent" id="rename-confirm">Renommer</button></div>
+  </div>
+</div>
+
+<!-- CALENDAR TOOLTIP -->
+<div class="cal-tooltip" id="cal-tooltip"></div>
+
+<script>
+/* ===== ICONS ===== */
+const IC={
+  food:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+  housing:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  transport:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+  leisure:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  health:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  savings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+  salary:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>',
+  other:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+  recurring:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>',
+};
+const CATEGORIES=[
+  {id:'food',name:'Alimentation',color:'#f97316',bg:'rgba(249,115,22,.1)'},
+  {id:'housing',name:'Logement',color:'#6366f1',bg:'rgba(99,102,241,.1)'},
+  {id:'transport',name:'Transport',color:'#8b5cf6',bg:'rgba(139,92,246,.1)'},
+  {id:'leisure',name:'Loisirs',color:'#ec4899',bg:'rgba(236,72,153,.1)'},
+  {id:'health',name:'Sant\u00e9',color:'#10b981',bg:'rgba(16,185,129,.1)'},
+  {id:'savings',name:'\u00c9pargne',color:'#eab308',bg:'rgba(234,179,8,.1)'},
+  {id:'salary',name:'Salaire',color:'#06b6d4',bg:'rgba(6,182,212,.1)'},
+  {id:'other',name:'Autre',color:'#71717a',bg:'rgba(113,113,122,.1)'},
+];
+const CM={};CATEGORIES.forEach(c=>CM[c.id]=c);
+const FREQ_LABELS={monthly:'Mensuel',weekly:'Hebdo',yearly:'Annuel'};
+
+/* ===== HELPERS ===== */
+function monthKey(d){d=d||new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function fmt(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' \u20ac'}
+function frMonth(k){const[y,m]=k.split('-');return['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'][+m-1]+' '+y}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function haptic(){try{navigator.vibrate(30)}catch(e){}}
+
+/* ===== API LAYER ===== */
+let TOKEN=localStorage.getItem('vault_token');
+let CURRENT_WALLET=null;
+let WALLETS=[];
+let USER=null;
+
+const api={
+  async fetch(url,opts={}){
+    const headers={'Content-Type':'application/json',...opts.headers};
+    if(TOKEN)headers['Authorization']='Bearer '+TOKEN;
+    const res=await fetch(url,{...opts,headers});
+    if(res.status===401){logout();throw new Error('Session expir\u00e9e')}
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Erreur serveur');
+    return data;
+  },
+  register:(username,pin)=>api.fetch('/api/register',{method:'POST',body:JSON.stringify({username,pin})}),
+  login:(username,pin)=>api.fetch('/api/login',{method:'POST',body:JSON.stringify({username,pin})}),
+  me:()=>api.fetch('/api/me'),
+  getWallets:()=>api.fetch('/api/wallets'),
+  createWallet:(name)=>api.fetch('/api/wallets',{method:'POST',body:JSON.stringify({name})}),
+  getWallet:(id)=>api.fetch(`/api/wallets/${id}`),
+  renameWallet:(id,name)=>api.fetch(`/api/wallets/${id}`,{method:'PUT',body:JSON.stringify({name})}),
+  deleteWallet:(id)=>api.fetch(`/api/wallets/${id}`,{method:'DELETE'}),
+  inviteToWallet:(id,username)=>api.fetch(`/api/wallets/${id}/invite`,{method:'POST',body:JSON.stringify({username})}),
+  removeMember:(wid,uid)=>api.fetch(`/api/wallets/${wid}/members/${uid}`,{method:'DELETE'}),
+  getTransactions:(wid,params={})=>{const q=new URLSearchParams(params).toString();return api.fetch(`/api/wallets/${wid}/transactions${q?'?'+q:''}`)},
+  addTransaction:(wid,tx)=>api.fetch(`/api/wallets/${wid}/transactions`,{method:'POST',body:JSON.stringify(tx)}),
+  updateTransaction:(wid,tid,data)=>api.fetch(`/api/wallets/${wid}/transactions/${tid}`,{method:'PUT',body:JSON.stringify(data)}),
+  deleteTransaction:(wid,tid)=>api.fetch(`/api/wallets/${wid}/transactions/${tid}`,{method:'DELETE'}),
+  getRecurring:(wid)=>api.fetch(`/api/wallets/${wid}/recurring`),
+  addRecurring:(wid,rec)=>api.fetch(`/api/wallets/${wid}/recurring`,{method:'POST',body:JSON.stringify(rec)}),
+  updateRecurring:(wid,rid,data)=>api.fetch(`/api/wallets/${wid}/recurring/${rid}`,{method:'PUT',body:JSON.stringify(data)}),
+  deleteRecurring:(wid,rid)=>api.fetch(`/api/wallets/${wid}/recurring/${rid}`,{method:'DELETE'}),
+  generateRecurring:(wid)=>api.fetch(`/api/wallets/${wid}/recurring/generate`,{method:'POST'}),
+  getBudgets:(wid)=>api.fetch(`/api/wallets/${wid}/budgets`),
+  saveBudgets:(wid,data)=>api.fetch(`/api/wallets/${wid}/budgets`,{method:'PUT',body:JSON.stringify(data)}),
+  getGoals:(wid)=>api.fetch(`/api/wallets/${wid}/goals`),
+  addGoal:(wid,data)=>api.fetch(`/api/wallets/${wid}/goals`,{method:'POST',body:JSON.stringify(data)}),
+  updateGoal:(wid,gid,data)=>api.fetch(`/api/wallets/${wid}/goals/${gid}`,{method:'PUT',body:JSON.stringify(data)}),
+  deleteGoal:(wid,gid)=>api.fetch(`/api/wallets/${wid}/goals/${gid}`,{method:'DELETE'}),
+  importData:(wid,data)=>api.fetch(`/api/wallets/${wid}/import`,{method:'POST',body:JSON.stringify(data)}),
+};
+
+/* ===== AUTH ===== */
+let authMode='login',authPin='';
+const authScreen=document.getElementById('auth-screen');
+
+document.querySelectorAll('.auth-tab').forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    authMode=tab.dataset.auth;
+    authPin='';
+    updateAuthDots(0);
+    document.getElementById('auth-error').textContent='';
+    document.getElementById('auth-pin-label').textContent=authMode==='login'?'Entrez votre PIN':'Choisissez un PIN (4 chiffres)';
+  };
+});
+
+document.querySelectorAll('#auth-pad .pin-key').forEach(k=>{
+  k.onclick=()=>{
+    const v=k.dataset.k;if(!v)return;
+    if(v==='del'){authPin=authPin.slice(0,-1)}
+    else if(authPin.length<4){authPin+=v}
+    updateAuthDots(authPin.length);
+    if(authPin.length===4)setTimeout(submitAuth,150);
+  };
+});
+
+function updateAuthDots(n){
+  document.querySelectorAll('#auth-dots .dot').forEach((d,i)=>d.classList.toggle('filled',i<n));
+}
+
+async function submitAuth(){
+  const username=document.getElementById('auth-username').value.trim();
+  const pin=authPin;
+  const errEl=document.getElementById('auth-error');
+  if(!username){errEl.textContent='Entrez un nom d\'utilisateur';authPin='';updateAuthDots(0);return}
+  try{
+    const fn=authMode==='login'?api.login:api.register;
+    const data=await fn(username,pin);
+    TOKEN=data.token;
+    localStorage.setItem('vault_token',TOKEN);
+    USER=data.user;
+    errEl.textContent='';
+    await enterApp();
+  }catch(e){
+    errEl.textContent=e.message;
+    authPin='';updateAuthDots(0);
+    document.querySelectorAll('#auth-dots .dot').forEach(d=>{d.classList.add('error');setTimeout(()=>d.classList.remove('error'),500)});
+  }
+}
+
+function logout(){
+  TOKEN=null;USER=null;CURRENT_WALLET=null;WALLETS=[];
+  localStorage.removeItem('vault_token');
+  document.getElementById('app').style.display='none';
+  document.getElementById('bottom-nav').style.display='none';
+  authScreen.classList.remove('hidden');
+  authPin='';updateAuthDots(0);
+  document.getElementById('auth-username').value='';
+  document.getElementById('auth-error').textContent='';
+}
+
+/* ===== APP ENTRY ===== */
+async function enterApp(){
+  authScreen.classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  document.getElementById('bottom-nav').style.display='flex';
+  if(!USER)USER=await api.me();
+  document.getElementById('user-display').textContent=USER.username;
+  WALLETS=await api.getWallets();
+  const savedW=localStorage.getItem('vault_wallet');
+  if(savedW&&WALLETS.find(w=>w.id==savedW))CURRENT_WALLET=WALLETS.find(w=>w.id==savedW);
+  else CURRENT_WALLET=WALLETS[0]||null;
+  renderWalletSelector();
+  checkMigration();
+  if(CURRENT_WALLET){
+    await api.generateRecurring(CURRENT_WALLET.id).catch(()=>{});
+    await renderHome();
+  }
+}
+
+/* ===== WALLET SELECTOR ===== */
+const SVG_SOLO='<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+const SVG_SHARED='<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>';
+
+function isShared(w){return(w.member_count||1)>1}
+
+function renderWalletHeader(){
+  const title=document.getElementById('wallet-title');
+  const badge=document.getElementById('wallet-badge');
+  if(!CURRENT_WALLET){title.textContent='Vault';badge.style.display='none';return}
+  title.textContent=CURRENT_WALLET.name;
+  badge.style.display='';
+  if(isShared(CURRENT_WALLET)){
+    badge.className='wallet-badge shared';
+    badge.innerHTML=SVG_SHARED+'Commun';
+  }else{
+    badge.className='wallet-badge solo';
+    badge.innerHTML=SVG_SOLO+'Solo';
+  }
+}
+
+function renderWalletSelector(){
+  renderWalletHeader();
+  if(CURRENT_WALLET){
+    document.getElementById('wallet-name-display').textContent=CURRENT_WALLET.name;
+    const mc=CURRENT_WALLET.member_count||1;
+    document.getElementById('members-count').textContent=mc+' membre'+(mc>1?'s':'');
+  }
+  // Render wallet cards in settings
+  const list=document.getElementById('settings-wallet-list');
+  list.innerHTML=WALLETS.map(w=>{
+    const shared=isShared(w);
+    const active=CURRENT_WALLET&&w.id===CURRENT_WALLET.id;
+    const mc=w.member_count||1;
+    return `<div class="wallet-card${active?' active':''}" data-wid="${w.id}">
+      <div class="wc-icon ${shared?'shared':'solo'}">${shared?SVG_SHARED:SVG_SOLO}</div>
+      <div class="wc-info">
+        <div class="wc-name">${esc(w.name)}</div>
+        <div class="wc-meta"><span class="wallet-badge ${shared?'shared':'solo'}" style="padding:1px 6px;font-size:9px">${shared?'Commun':'Solo'}</span>${mc} membre${mc>1?'s':''} &bull; ${w.role==='owner'?'Propri\u00e9taire':'Membre'}</div>
+      </div>
+      <div class="wc-check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+    </div>`;
+  }).join('');
+  // Click to switch wallet
+  list.querySelectorAll('.wallet-card').forEach(card=>{
+    card.onclick=async()=>{
+      const wid=parseInt(card.dataset.wid);
+      if(CURRENT_WALLET&&CURRENT_WALLET.id===wid)return;
+      CURRENT_WALLET=WALLETS.find(w=>w.id===wid);
+      localStorage.setItem('vault_wallet',CURRENT_WALLET.id);
+      renderWalletSelector();
+      document.getElementById('settings-modal').classList.remove('show');
+      await api.generateRecurring(CURRENT_WALLET.id).catch(()=>{});
+      await renderCurrent();
+      toast('Wallet : '+CURRENT_WALLET.name);
+    };
+  });
+}
+
+document.getElementById('btn-add-wallet').onclick=async()=>{
+  const name=prompt('Nom du nouveau wallet :');
+  if(!name||!name.trim())return;
+  try{
+    const w=await api.createWallet(name.trim());
+    WALLETS.push({...w,member_count:1});
+    CURRENT_WALLET=WALLETS[WALLETS.length-1];
+    localStorage.setItem('vault_wallet',CURRENT_WALLET.id);
+    renderWalletSelector();toast('Wallet cr\u00e9\u00e9');
+    document.getElementById('settings-modal').classList.remove('show');
+    await renderHome();
+  }catch(e){toast(e.message,false)}
+};
+
+/* ===== MIGRATION ===== */
+function checkMigration(){
+  const hasTx=localStorage.getItem('v_tx');
+  const hasRec=localStorage.getItem('v_rec');
+  const hasBgt=localStorage.getItem('v_bgt');
+  const hasGoals=localStorage.getItem('v_goals');
+  if((hasTx||hasRec||hasBgt||hasGoals)&&CURRENT_WALLET){
+    document.getElementById('migration-banner').classList.add('show');
+  }
+}
+document.getElementById('btn-migrate').onclick=async()=>{
+  if(!CURRENT_WALLET)return;
+  try{
+    const data={
+      transactions:JSON.parse(localStorage.getItem('v_tx')||'[]'),
+      recurring:JSON.parse(localStorage.getItem('v_rec')||'[]'),
+      budgets:JSON.parse(localStorage.getItem('v_bgt')||'{}'),
+      goals:JSON.parse(localStorage.getItem('v_goals')||'[]'),
+    };
+    await api.importData(CURRENT_WALLET.id,data);
+    localStorage.removeItem('v_tx');localStorage.removeItem('v_rec');
+    localStorage.removeItem('v_bgt');localStorage.removeItem('v_goals');
+    localStorage.removeItem('v_pin');localStorage.removeItem('v_onboarded');
+    document.getElementById('migration-banner').classList.remove('show');
+    toast('Donn\u00e9es import\u00e9es !');
+    await renderCurrent();
+  }catch(e){toast(e.message,false)}
+};
+document.getElementById('btn-dismiss-migrate').onclick=()=>{
+  document.getElementById('migration-banner').classList.remove('show');
+};
+
+/* ===== ANIM COUNTER ===== */
+function animateValue(el,start,end,duration){
+  const range=end-start;
+  if(!range){el.textContent=fmt(end);return}
+  const startTime=performance.now();
+  function step(now){
+    const p=Math.min((now-startTime)/duration,1);
+    const ease=1-Math.pow(1-p,3);
+    el.textContent=fmt(start+range*ease);
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ===== NAV ===== */
+const navBtns=document.querySelectorAll('.nav-btn');
+async function navigate(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  navBtns.forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelector(`.nav-btn[data-page="${p}"]`).classList.add('active');
+  window.scrollTo(0,0);
+  if(!CURRENT_WALLET)return;
+  if(p==='home')await renderHome();
+  if(p==='budget')await renderBudget();
+  if(p==='history')await renderHistory();
+  if(p==='recurring')await renderRecurring();
+}
+navBtns.forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
+async function renderCurrent(){const a=document.querySelector('.page.active');if(a)await navigate(a.id.replace('page-',''))}
+
+/* ===== TOAST ===== */
+function toast(msg,ok=true){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.querySelector('svg').innerHTML=ok?'<path d="M5 13l4 4L19 7"/>':'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+  t.className='toast '+(ok?'ok':'err');
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ===== THEME ===== */
+function initTheme(){document.documentElement.setAttribute('data-theme',localStorage.getItem('v_theme')||'dark')}
+document.getElementById('btn-theme').onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('v_theme',next);haptic();
+};
+
+/* ===== MODALS ===== */
+let delId=null,delMode='tx';
+const modal=document.getElementById('modal');
+function openDel(id){delId=id;delMode='tx';document.getElementById('modal-title').textContent='Supprimer cette transaction ?';document.getElementById('modal-desc').textContent='Cette action est irr\u00e9versible.';modal.classList.add('show')}
+function openDelRec(id){delId=id;delMode='rec';document.getElementById('modal-title').textContent='Supprimer ce pr\u00e9l\u00e8vement ?';document.getElementById('modal-desc').textContent='Le pr\u00e9l\u00e8vement ne sera plus g\u00e9n\u00e9r\u00e9.';modal.classList.add('show')}
+document.getElementById('modal-cancel').onclick=()=>{modal.classList.remove('show');delId=null;closeAllSwiped()};
+document.getElementById('modal-confirm').onclick=async()=>{
+  if(delId!==null&&CURRENT_WALLET){
+    try{
+      if(delMode==='tx'){await api.deleteTransaction(CURRENT_WALLET.id,delId);toast('Transaction supprim\u00e9e')}
+      else{await api.deleteRecurring(CURRENT_WALLET.id,delId);toast('Pr\u00e9l\u00e8vement supprim\u00e9')}
+    }catch(e){toast(e.message,false)}
+    delId=null;
+  }
+  modal.classList.remove('show');await renderCurrent();
+};
+
+/* ===== EDIT MODAL ===== */
+let editId=null;
+document.getElementById('edit-cancel').onclick=()=>{document.getElementById('edit-modal').classList.remove('show');editId=null};
+document.getElementById('edit-save').onclick=async()=>{
+  if(editId===null||!CURRENT_WALLET)return;
+  try{
+    await api.updateTransaction(CURRENT_WALLET.id,editId,{
+      name:document.getElementById('edit-name').value.trim(),
+      amount:parseFloat(document.getElementById('edit-amount').value),
+      date:document.getElementById('edit-date').value,
+    });
+    toast('Transaction modifi\u00e9e');haptic();
+  }catch(e){toast(e.message,false)}
+  document.getElementById('edit-modal').classList.remove('show');editId=null;await renderCurrent();
+};
+async function openEdit(id){
+  if(!CURRENT_WALLET)return;
+  const txs=await api.getTransactions(CURRENT_WALLET.id);
+  const t=txs.find(x=>x.id===id);if(!t)return;
+  editId=id;
+  document.getElementById('edit-name').value=t.name;
+  document.getElementById('edit-amount').value=t.amount;
+  document.getElementById('edit-date').value=t.date;
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+/* ===== SETTINGS ===== */
+document.getElementById('btn-settings').onclick=async()=>{
+  // Refresh wallets to get latest member counts
+  try{WALLETS=await api.getWallets();if(CURRENT_WALLET)CURRENT_WALLET=WALLETS.find(w=>w.id===CURRENT_WALLET.id)||WALLETS[0]}catch(e){}
+  renderWalletSelector();
+  document.getElementById('settings-modal').classList.add('show');
+};
+document.getElementById('settings-close').onclick=()=>document.getElementById('settings-modal').classList.remove('show');
+document.getElementById('btn-logout').onclick=()=>{document.getElementById('settings-modal').classList.remove('show');logout()};
+
+// Backup
+document.getElementById('btn-backup').onclick=async()=>{
+  if(!CURRENT_WALLET)return;
+  try{
+    const[txs,recs,budgets,goals]=await Promise.all([
+      api.getTransactions(CURRENT_WALLET.id),api.getRecurring(CURRENT_WALLET.id),
+      api.getBudgets(CURRENT_WALLET.id),api.getGoals(CURRENT_WALLET.id)
+    ]);
+    const data={wallet:CURRENT_WALLET.name,transactions:txs,recurring:recs,budgets,goals};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='vault-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    a.click();toast('Sauvegarde t\u00e9l\u00e9charg\u00e9e');
+  }catch(e){toast(e.message,false)}
+};
+
+// Delete wallet
+document.getElementById('btn-delete-wallet').onclick=async()=>{
+  if(!CURRENT_WALLET)return;
+  if(!confirm('Supprimer le wallet "'+CURRENT_WALLET.name+'" et toutes ses donn\u00e9es ?'))return;
+  try{
+    await api.deleteWallet(CURRENT_WALLET.id);
+    WALLETS=WALLETS.filter(w=>w.id!==CURRENT_WALLET.id);
+    CURRENT_WALLET=WALLETS[0]||null;
+    renderWalletSelector();toast('Wallet supprim\u00e9');
+    document.getElementById('settings-modal').classList.remove('show');
+    await renderCurrent();
+  }catch(e){toast(e.message,false)}
+};
+
+// Rename wallet
+document.getElementById('btn-rename-wallet').onclick=()=>{
+  document.getElementById('settings-modal').classList.remove('show');
+  document.getElementById('rename-input').value=CURRENT_WALLET?CURRENT_WALLET.name:'';
+  document.getElementById('rename-modal').classList.add('show');
+};
+document.getElementById('rename-cancel').onclick=()=>document.getElementById('rename-modal').classList.remove('show');
+document.getElementById('rename-confirm').onclick=async()=>{
+  if(!CURRENT_WALLET)return;
+  const name=document.getElementById('rename-input').value.trim();
+  if(!name)return;
+  try{
+    await api.renameWallet(CURRENT_WALLET.id,name);
+    CURRENT_WALLET.name=name;
+    const w=WALLETS.find(w=>w.id===CURRENT_WALLET.id);if(w)w.name=name;
+    renderWalletSelector();toast('Wallet renomm\u00e9');
+  }catch(e){toast(e.message,false)}
+  document.getElementById('rename-modal').classList.remove('show');
+};
+
+// Invite
+document.getElementById('btn-invite').onclick=()=>{
+  document.getElementById('settings-modal').classList.remove('show');
+  document.getElementById('invite-username').value='';
+  document.getElementById('invite-modal').classList.add('show');
+};
+document.getElementById('invite-cancel').onclick=()=>document.getElementById('invite-modal').classList.remove('show');
+document.getElementById('invite-confirm').onclick=async()=>{
+  if(!CURRENT_WALLET)return;
+  const username=document.getElementById('invite-username').value.trim();
+  if(!username)return;
+  try{
+    await api.inviteToWallet(CURRENT_WALLET.id,username);
+    // Refresh wallets to get updated member_count
+    WALLETS=await api.getWallets();
+    CURRENT_WALLET=WALLETS.find(w=>w.id===CURRENT_WALLET.id)||WALLETS[0];
+    renderWalletSelector();toast(username+' invit\u00e9 !');
+  }catch(e){toast(e.message,false)}
+  document.getElementById('invite-modal').classList.remove('show');
+};
+
+// Members
+document.getElementById('btn-manage-members').onclick=async()=>{
+  if(!CURRENT_WALLET)return;
+  document.getElementById('settings-modal').classList.remove('show');
+  try{
+    const detail=await api.getWallet(CURRENT_WALLET.id);
+    document.getElementById('members-wallet-name').textContent=detail.name;
+    document.getElementById('members-list').innerHTML=detail.members.map(m=>{
+      const isOwner=m.role==='owner';
+      const canRemove=CURRENT_WALLET.role==='owner'&&m.id!==USER.id;
+      return `<div class="member-item"><div class="member-avatar">${esc(m.username[0].toUpperCase())}</div><span class="member-name">${esc(m.username)}</span><span class="member-role">${m.role}</span>${canRemove?`<button class="member-remove" onclick="removeMember(${m.id})"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div>`;
+    }).join('');
+    document.getElementById('members-modal').classList.add('show');
+  }catch(e){toast(e.message,false)}
+};
+document.getElementById('members-close').onclick=()=>document.getElementById('members-modal').classList.remove('show');
+async function removeMember(uid){
+  if(!CURRENT_WALLET)return;
+  try{
+    await api.removeMember(CURRENT_WALLET.id,uid);
+    toast('Membre retir\u00e9');
+    document.getElementById('members-modal').classList.remove('show');
+    WALLETS=await api.getWallets();
+    CURRENT_WALLET=WALLETS.find(w=>w.id===CURRENT_WALLET.id)||WALLETS[0];
+    renderWalletSelector();
+  }catch(e){toast(e.message,false)}
+}
+
+/* ===== HOME ===== */
+let chart=null,evoChart=null;
+async function renderHome(){
+  if(!CURRENT_WALLET)return;
+  const mk=monthKey();
+  const allTxs=await api.getTransactions(CURRENT_WALLET.id);
+  const mt=allTxs.filter(t=>t.date&&t.date.slice(0,7)===mk);
+
+  document.getElementById('home-month').textContent=frMonth(mk);
+  const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+
+  // Progressive balance: all income - all expense up to today
+  const today=new Date().toISOString().slice(0,10);
+  const pastTx=allTxs.filter(t=>t.date&&t.date<=today);
+  const totalInc=pastTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExp=pastTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const progressiveBal=totalInc-totalExp;
+
+  const balEl=document.getElementById('balance');
+  animateValue(balEl,0,progressiveBal,600);
+  balEl.style.color=progressiveBal>=0?'var(--green)':'var(--red)';
+  const todayFr=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('balance-meta').textContent='Solde global au '+todayFr+' \u2022 Mois: '+(inc-exp>=0?'+':'')+fmt(inc-exp);
+
+  animateValue(document.getElementById('total-income'),0,inc,500);
+  animateValue(document.getElementById('total-expense'),0,exp,500);
+
+  // donut
+  const byC={};mt.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
+  const keys=Object.keys(byC);
+  if(keys.length){
+    document.getElementById('chart-wrap').style.display='';document.getElementById('chart-legend').style.display='';document.getElementById('no-chart').style.display='none';
+    if(chart)chart.destroy();
+    chart=new Chart(document.getElementById('donut'),{type:'doughnut',data:{labels:keys.map(k=>CM[k]?CM[k].name:k),datasets:[{data:keys.map(k=>byC[k]),backgroundColor:keys.map(k=>CM[k]?CM[k].color:'#71717a'),borderWidth:0,hoverOffset:4}]},options:{cutout:'72%',responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'var(--surface2)',titleColor:'var(--text)',bodyColor:'var(--text2)',padding:12,cornerRadius:8,callbacks:{label:c=>'  '+fmt(c.parsed)}}}}});
+    document.getElementById('chart-val').textContent=fmt(exp);
+    document.getElementById('chart-legend').innerHTML=keys.map(k=>`<div class="leg-item"><span class="leg-dot" style="background:${CM[k]?CM[k].color:'#71717a'}"></span>${CM[k]?CM[k].name:k}</div>`).join('');
+  }else{document.getElementById('chart-wrap').style.display='none';document.getElementById('chart-legend').style.display='none';document.getElementById('no-chart').style.display=''}
+
+  renderEvoChart(allTxs);
+  await renderUpcoming();
+
+  // recent
+  const box=document.getElementById('recent-list');
+  const recent=[...allTxs].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,3);
+  if(!recent.length){box.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><p>Aucune transaction</p></div>'}
+  else{box.innerHTML=recent.map(txHTML).join('');swipe(box)}
+}
+
+function renderEvoChart(txs){
+  const now=new Date();const mk=monthKey(now);
+  const mt=txs.filter(t=>t.date&&t.date.slice(0,7)===mk);
+  const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const today=now.getDate();
+  const totalIncome=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  let running=totalIncome;const balances=[];const labels=[];
+  for(let d=1;d<=daysInMonth;d++){
+    const dayStr=`${mk}-${String(d).padStart(2,'0')}`;
+    const dayExp=mt.filter(t=>t.type==='expense'&&t.date===dayStr).reduce((s,t)=>s+t.amount,0);
+    running-=dayExp;labels.push(d);
+    balances.push(d<=today?Math.round(running*100)/100:null);
+  }
+  const projected=balances.map((v,i)=>i>=today-1?balances[today-1]:null);
+  if(evoChart)evoChart.destroy();
+  const ctx=document.getElementById('evo-chart');
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const gridC=isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';
+  const tickC=isDark?'#52525b':'#a1a1aa';
+  const canvas=ctx.getContext('2d');const grad=canvas.createLinearGradient(0,0,0,180);
+  grad.addColorStop(0,'rgba(99,102,241,.25)');grad.addColorStop(1,'rgba(99,102,241,.0)');
+  evoChart=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'Solde',data:balances,borderColor:'#818cf8',backgroundColor:grad,fill:true,tension:.3,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:'#818cf8',borderWidth:2.5,spanGaps:false},
+    {label:'Projection',data:projected,borderColor:'rgba(129,140,248,.3)',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4],spanGaps:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#27272a':'#ffffff',titleColor:isDark?'#fafafa':'#18181b',bodyColor:isDark?'#a1a1aa':'#52525b',borderColor:isDark?'#3f3f46':'#e4e4e7',borderWidth:1,padding:12,cornerRadius:8,displayColors:false,callbacks:{title:items=>'Jour '+items[0].label,label:c=>c.dataset.label==='Solde'&&c.parsed.y!==null?fmt(c.parsed.y):''},filter:item=>item.dataset.label==='Solde'&&item.parsed.y!==null}},
+    scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10,weight:'500'},color:tickC,autoSkip:false,maxRotation:0,callback:function(v,i){const d=i+1;if(d===1)return d;if(d%5===0&&daysInMonth-d>=3)return d;if(d===daysInMonth)return d;return''}}},y:{grid:{color:gridC},border:{display:false},ticks:{font:{family:'Inter',size:10},color:tickC,callback:v=>v>=1000?(v/1000)+'k':v<=-1000?(v/1000)+'k':v}}}
+  }});
+}
+
+async function renderUpcoming(){
+  if(!CURRENT_WALLET)return;
+  const recs=await api.getRecurring(CURRENT_WALLET.id);
+  const active=recs.filter(r=>r.active&&r.frequency==='monthly');
+  const label=document.getElementById('upcoming-label'),box=document.getElementById('upcoming-list');
+  if(!active.length){label.style.display='none';box.innerHTML='';return}
+  const now=new Date(),today=now.getDate(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const upcoming=active.map(r=>({...r,d:Math.min(r.day,dim)})).filter(r=>r.d>=today).sort((a,b)=>a.d-b.d);
+  if(!upcoming.length){label.style.display='none';box.innerHTML='';return}
+  label.style.display='';
+  box.innerHTML=upcoming.map(r=>{
+    const c=CM[r.category]||CM['other'];
+    const dl=r.d===today?"Aujourd'hui":`Le ${r.d}`;
+    return `<div class="upcoming-item"><div class="tx-icon" style="background:${r.type==='income'?'var(--green-bg)':c.bg};color:${r.type==='income'?'var(--green)':c.color}">${IC[r.category]||IC.other}</div><div class="up-info"><div class="up-name">${esc(r.name)}</div><div class="up-date">${dl}</div></div><div class="up-amount ${r.type==='income'?'income-c':''}">${r.type==='income'?'+':'\u2013'}${fmt(r.amount)}</div></div>`;
+  }).join('');
+}
+
+function txHTML(t){
+  const c=CM[t.category]||CM['other'];const s=t.type==='income'?'+':'\u2013';const cls=t.type==='income'?'income-c':'expense-c';
+  const bg=t.type==='income'?'var(--green-bg)':c.bg;const ic=t.type==='income'?IC.salary:IC[t.category]||IC.other;
+  const dt=new Date(t.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  return `<div class="tx-item" data-id="${t.id}"><div class="tx-icon" style="background:${bg};color:${t.type==='income'?'var(--green)':c.color}">${ic}</div><div class="tx-info"><div class="tx-name">${esc(t.name)}</div><div class="tx-cat">${c.name}</div></div><div class="tx-right"><div class="tx-amount ${cls}">${s}${fmt(t.amount)}</div><div class="tx-date">${dt}</div></div><div class="tx-actions"><button class="tx-edit" onclick="openEdit(${t.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button><button class="tx-del" onclick="openDel(${t.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Suppr</button></div></div>`;
+}
+
+/* ===== SWIPE ===== */
+function closeAllSwiped(){document.querySelectorAll('.swiped').forEach(e=>e.classList.remove('swiped'))}
+function swipe(el){
+  let sx=0,cur=null;
+  el.addEventListener('touchstart',e=>{const it=e.target.closest('.tx-item,.rec-item');if(!it||e.target.closest('.tx-actions,.tx-edit,.tx-del,.rec-del'))return;closeAllSwiped();cur=it;sx=e.touches[0].clientX},{passive:true});
+  el.addEventListener('touchend',e=>{if(!cur)return;if(e.changedTouches[0].clientX-sx<-50)cur.classList.add('swiped');else cur.classList.remove('swiped');cur=null},{passive:true});
+}
+
+/* ===== ADD FORM ===== */
+let selType='expense',selCat='food';
+function initForm(){
+  const chips=document.getElementById('cat-chips');
+  chips.innerHTML=CATEGORIES.map(c=>`<div class="cat-chip" data-cat="${c.id}">${IC[c.id]}${c.name}</div>`).join('');
+  chips.querySelectorAll('.cat-chip').forEach(ch=>{ch.addEventListener('click',()=>{chips.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('active'));ch.classList.add('active');selCat=ch.dataset.cat})});
+  chips.querySelector('[data-cat="food"]').classList.add('active');
+  document.getElementById('btn-expense').onclick=()=>{selType='expense';document.getElementById('btn-expense').className='type-btn sel-expense';document.getElementById('btn-income').className='type-btn'};
+  document.getElementById('btn-income').onclick=()=>{selType='income';document.getElementById('btn-income').className='type-btn sel-income';document.getElementById('btn-expense').className='type-btn'};
+  document.getElementById('tx-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('btn-add').onclick=addTx;
+}
+async function addTx(){
+  const name=document.getElementById('tx-name').value.trim(),amount=parseFloat(document.getElementById('tx-amount').value),date=document.getElementById('tx-date').value;
+  if(!name){toast('Entrez un libell\u00e9',false);return}
+  if(!amount||amount<=0){toast('Montant invalide',false);return}
+  if(!date){toast('Choisissez une date',false);return}
+  if(!CURRENT_WALLET)return;
+  try{
+    await api.addTransaction(CURRENT_WALLET.id,{name,amount,type:selType,category:selCat,date});
+    document.getElementById('tx-name').value='';document.getElementById('tx-amount').value='';document.getElementById('tx-date').value=new Date().toISOString().slice(0,10);
+    toast(selType==='income'?'Revenu enregistr\u00e9':'D\u00e9pense enregistr\u00e9e');haptic();navigate('home');
+  }catch(e){toast(e.message,false)}
+}
+
+/* ===== RECURRING PAGE ===== */
+let recType='expense',recCat='housing',recFreq='monthly';
+function initRecForm(){
+  const chips=document.getElementById('rec-cat-chips');
+  chips.innerHTML=CATEGORIES.map(c=>`<div class="cat-chip" data-cat="${c.id}">${IC[c.id]}${c.name}</div>`).join('');
+  chips.querySelectorAll('.cat-chip').forEach(ch=>{ch.addEventListener('click',()=>{chips.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('active'));ch.classList.add('active');recCat=ch.dataset.cat})});
+  chips.querySelector('[data-cat="housing"]').classList.add('active');
+  document.getElementById('rec-btn-expense').onclick=()=>{recType='expense';document.getElementById('rec-btn-expense').className='type-btn sel-expense';document.getElementById('rec-btn-income').className='type-btn'};
+  document.getElementById('rec-btn-income').onclick=()=>{recType='income';document.getElementById('rec-btn-income').className='type-btn sel-income';document.getElementById('rec-btn-expense').className='type-btn'};
+  document.querySelectorAll('.freq-chip').forEach(ch=>{ch.addEventListener('click',()=>{document.querySelectorAll('.freq-chip').forEach(x=>x.classList.remove('active'));ch.classList.add('active');recFreq=ch.dataset.freq;document.getElementById('rec-day-group').style.display=recFreq==='weekly'?'none':''})});
+  document.getElementById('btn-show-rec-form').onclick=()=>{const f=document.getElementById('rec-form');f.style.display=f.style.display==='none'?'':'none'};
+  document.getElementById('btn-save-rec').onclick=saveRecItem;
+}
+async function saveRecItem(){
+  const name=document.getElementById('rec-name').value.trim(),amount=parseFloat(document.getElementById('rec-amount').value),day=parseInt(document.getElementById('rec-day').value)||1;
+  if(!name){toast('Entrez un libell\u00e9',false);return}if(!amount||amount<=0){toast('Montant invalide',false);return}
+  if(!CURRENT_WALLET)return;
+  try{
+    await api.addRecurring(CURRENT_WALLET.id,{name,amount,type:recType,category:recCat,frequency:recFreq,day:Math.max(1,Math.min(31,day))});
+    document.getElementById('rec-name').value='';document.getElementById('rec-amount').value='';document.getElementById('rec-day').value='1';document.getElementById('rec-form').style.display='none';
+    toast('Pr\u00e9l\u00e8vement cr\u00e9\u00e9');haptic();
+    await api.generateRecurring(CURRENT_WALLET.id).catch(()=>{});
+    await renderRecurring();
+  }catch(e){toast(e.message,false)}
+}
+async function renderRecurring(){
+  if(!CURRENT_WALLET)return;
+  const recs=await api.getRecurring(CURRENT_WALLET.id);
+  renderCalendar(recs);
+  const box=document.getElementById('rec-list');
+  if(!recs.length){box.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><p>Aucun pr\u00e9l\u00e8vement</p></div>';return}
+  box.innerHTML=recs.map(r=>{
+    const c=CM[r.category]||CM['other'];const bg=r.type==='income'?'var(--green-bg)':c.bg;const col=r.type==='income'?'var(--green)':c.color;
+    const dayInfo=r.frequency==='weekly'?'Chaque semaine':r.frequency==='yearly'?`Le ${r.day}, annuel`:`Le ${r.day} du mois`;
+    return `<div class="rec-item" data-id="${r.id}"><div class="rec-icon" style="background:${bg};color:${col}">${IC[r.category]||IC.other}</div><div class="rec-info"><div class="rec-name">${esc(r.name)}</div><div class="rec-detail"><span class="freq-badge">${FREQ_LABELS[r.frequency]}</span>${dayInfo}</div></div><div class="rec-right"><span class="rec-amount ${r.type==='income'?'income-c':'expense-c'}">${r.type==='income'?'+':'\u2013'}${fmt(r.amount)}</span><label class="toggle"><input type="checkbox" ${r.active?'checked':''} onchange="toggleRec(${r.id},this.checked)"><span class="slider"></span></label></div><button class="rec-del" onclick="openDelRec(${r.id})">Suppr.</button></div>`;
+  }).join('');swipe(box);
+}
+async function toggleRec(id,active){
+  if(!CURRENT_WALLET)return;
+  try{await api.updateRecurring(CURRENT_WALLET.id,id,{active});toast(active?'Activ\u00e9':'D\u00e9sactiv\u00e9')}catch(e){toast(e.message,false)}
+}
+
+/* ===== RECURRING CALENDAR ===== */
+function renderCalendar(recs){
+  const now=new Date();const year=now.getFullYear();const month=now.getMonth();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const firstDow=(new Date(year,month,1).getDay()+6)%7; // Mon=0
+  const today=now.getDate();
+  const grid=document.getElementById('cal-grid');
+
+  // Map days to recurring items
+  const dayMap={};
+  const activeRecs=recs.filter(r=>r.active);
+  for(let d=1;d<=daysInMonth;d++)dayMap[d]=[];
+  activeRecs.forEach(r=>{
+    if(r.frequency==='monthly'){
+      const d=Math.min(r.day,daysInMonth);
+      dayMap[d].push(r);
+    }else if(r.frequency==='weekly'){
+      for(let d=1;d<=daysInMonth;d++){
+        const dow=new Date(year,month,d).getDay();
+        if(dow===(r.day%7))dayMap[d].push(r);
+      }
+    }else if(r.frequency==='yearly'){
+      const d=Math.min(r.day,daysInMonth);
+      dayMap[d].push(r);
+    }
+  });
+
+  let html='';
+  for(let i=0;i<firstDow;i++)html+='<div class="cal-day empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=d===today;
+    const items=dayMap[d];
+    const dots=items.map(r=>{const c=CM[r.category]||CM['other'];return `<span class="cal-dot" style="background:${r.type==='income'?'var(--green)':c.color}"></span>`}).join('');
+    html+=`<div class="cal-day${isToday?' today':''}" data-day="${d}">${d}${dots?'<div class="cal-dots">'+dots+'</div>':''}</div>`;
+  }
+  grid.innerHTML=html;
+
+  // Tooltip on click
+  grid.querySelectorAll('.cal-day:not(.empty)').forEach(cell=>{
+    cell.onclick=(e)=>{
+      const d=parseInt(cell.dataset.day);const items=dayMap[d];
+      const tt=document.getElementById('cal-tooltip');
+      if(!items||!items.length){tt.classList.remove('show');return}
+      tt.innerHTML=items.map(r=>{
+        const c=CM[r.category]||CM['other'];
+        return `<div class="ct-item"><span class="ct-name" style="color:${r.type==='income'?'var(--green)':c.color}">${esc(r.name)}</span><span class="ct-amount">${r.type==='income'?'+':'\u2013'}${fmt(r.amount)}</span></div>`;
+      }).join('');
+      const rect=cell.getBoundingClientRect();
+      tt.style.top=(rect.bottom+4)+'px';
+      tt.style.left=Math.min(rect.left,window.innerWidth-210)+'px';
+      tt.classList.add('show');
+    };
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.cal-day')&&!e.target.closest('.cal-tooltip'))document.getElementById('cal-tooltip').classList.remove('show')});
+}
+
+/* ===== BUDGET ===== */
+async function renderBudget(){
+  if(!CURRENT_WALLET)return;
+  const mk=monthKey();
+  const[txs,bg]=await Promise.all([api.getTransactions(CURRENT_WALLET.id,{month:mk}),api.getBudgets(CURRENT_WALLET.id)]);
+  const cats=CATEGORIES.filter(c=>c.id!=='salary');
+  document.getElementById('budget-list').innerHTML=cats.map(c=>{
+    const spent=txs.filter(t=>t.type==='expense'&&t.category===c.id).reduce((s,t)=>s+t.amount,0);
+    const lim=bg[c.id]||0;const pct=lim>0?Math.min(spent/lim*100,100):0;
+    const cls=lim===0?'g':(pct<75?'g':(pct<100?'o':'r'));const over=lim>0&&spent>lim;
+    return `<div class="budget-item"><div class="b-head"><div class="b-icon" style="background:${c.bg};color:${c.color}">${IC[c.id]}</div><span class="b-name">${c.name}</span><input class="b-input" type="number" inputmode="decimal" placeholder="0" value="${lim||''}" data-cat="${c.id}" min="0" step="1"></div><div class="b-bar"><div class="b-fill ${cls}" style="width:${pct}%"></div></div><div class="b-meta"><span class="spent" style="color:${over?'var(--red)':'var(--text2)'}">${fmt(spent)}</span><span>${lim>0?'/ '+fmt(lim):'Pas de limite'}</span></div></div>`;
+  }).join('');
+  document.querySelectorAll('.b-input').forEach(inp=>{inp.addEventListener('change',async()=>{
+    const budgets=await api.getBudgets(CURRENT_WALLET.id);
+    const v=parseFloat(inp.value)||0;
+    if(v>0)budgets[inp.dataset.cat]=v;else delete budgets[inp.dataset.cat];
+    await api.saveBudgets(CURRENT_WALLET.id,budgets);
+    await renderBudget();
+  })});
+  await renderGoals();
+}
+
+/* ===== SAVINGS GOALS ===== */
+document.getElementById('btn-add-goal').onclick=async()=>{
+  const name=document.getElementById('goal-name').value.trim();
+  const target=parseFloat(document.getElementById('goal-target').value);
+  if(!name||!target||target<=0){toast('Nom et objectif requis',false);return}
+  if(!CURRENT_WALLET)return;
+  try{
+    await api.addGoal(CURRENT_WALLET.id,{name,target});
+    document.getElementById('goal-name').value='';document.getElementById('goal-target').value='';
+    toast('Objectif cr\u00e9\u00e9');haptic();await renderGoals();
+  }catch(e){toast(e.message,false)}
+};
+async function renderGoals(){
+  if(!CURRENT_WALLET)return;
+  const goals=await api.getGoals(CURRENT_WALLET.id);
+  const box=document.getElementById('goals-list');
+  if(!goals.length){box.innerHTML='<div class="no-data">Aucun objectif d\'\u00e9pargne</div>';return}
+  box.innerHTML=goals.map(g=>{
+    const pct=Math.min(g.current/g.target*100,100);
+    return `<div class="goal-item"><div class="goal-head"><div class="goal-emoji"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.8" width="20" height="20"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><span class="goal-name">${esc(g.name)}</span><button class="goal-delete" onclick="deleteGoal(${g.id})"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div><div class="goal-meta"><span>${fmt(g.current)} / ${fmt(g.target)}</span><span class="goal-pct">${Math.round(pct)}%</span></div><div class="goal-contribute"><input class="f-input" type="number" placeholder="Montant" inputmode="decimal" id="gc-${g.id}"><button onclick="contributeGoal(${g.id})">Ajouter</button></div></div>`;
+  }).join('');
+}
+async function contributeGoal(id){
+  const inp=document.getElementById('gc-'+id);const val=parseFloat(inp.value);
+  if(!val||val<=0){toast('Montant invalide',false);return}
+  if(!CURRENT_WALLET)return;
+  try{
+    const goals=await api.getGoals(CURRENT_WALLET.id);const g=goals.find(x=>x.id===id);
+    if(g){await api.updateGoal(CURRENT_WALLET.id,id,{current:Math.min(g.current+val,g.target)});inp.value='';toast('Ajout\u00e9 !');haptic();await renderGoals()}
+  }catch(e){toast(e.message,false)}
+}
+async function deleteGoal(id){
+  if(!CURRENT_WALLET)return;
+  try{await api.deleteGoal(CURRENT_WALLET.id,id);toast('Objectif supprim\u00e9');await renderGoals()}catch(e){toast(e.message,false)}
+}
+
+/* ===== HISTORY ===== */
+let historyTxs=[];
+async function renderHistory(){
+  if(!CURRENT_WALLET)return;
+  historyTxs=await api.getTransactions(CURRENT_WALLET.id);
+  const mSel=document.getElementById('filter-month');
+  const ms=new Set([monthKey()]);historyTxs.forEach(t=>{if(t.date)ms.add(t.date.slice(0,7))});
+  const sorted=[...ms].sort().reverse(),cur=mSel.value||monthKey();
+  mSel.innerHTML=sorted.map(m=>`<option value="${m}"${m===cur?' selected':''}>${frMonth(m)}</option>`).join('');
+  const cSel=document.getElementById('filter-cat'),cc=cSel.value||'all';
+  cSel.innerHTML='<option value="all">Toutes cat.</option>'+CATEGORIES.map(c=>`<option value="${c.id}"${c.id===cc?' selected':''}>${c.name}</option>`).join('');
+  applyFilters();
+}
+function applyFilters(){
+  const m=document.getElementById('filter-month').value,tp=document.getElementById('filter-type').value,ct=document.getElementById('filter-cat').value;
+  const q=(document.getElementById('search-input').value||'').toLowerCase().trim();
+  let f=historyTxs.filter(t=>t.date&&t.date.slice(0,7)===m);
+  if(tp!=='all')f=f.filter(t=>t.type===tp);if(ct!=='all')f=f.filter(t=>t.category===ct);
+  if(q)f=f.filter(t=>t.name.toLowerCase().includes(q));
+  f.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  const box=document.getElementById('history-list');
+  if(!f.length){box.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Aucune transaction</p></div>'}
+  else{box.innerHTML=f.map(txHTML).join('');swipe(box)}
+}
+document.getElementById('filter-month').onchange=applyFilters;
+document.getElementById('filter-type').onchange=applyFilters;
+document.getElementById('filter-cat').onchange=applyFilters;
+document.getElementById('search-input').oninput=applyFilters;
+
+/* ===== CSV EXPORT ===== */
+document.getElementById('btn-export').onclick=()=>{
+  const m=document.getElementById('filter-month').value;
+  let f=historyTxs.filter(t=>t.date&&t.date.slice(0,7)===m);
+  f.sort((a,b)=>a.date.localeCompare(b.date));
+  let csv='Date;Libell\u00e9;Type;Cat\u00e9gorie;Montant\n';
+  f.forEach(t=>{
+    const c=CM[t.category]?CM[t.category].name:t.category;
+    csv+=`${t.date};${t.name};${t.type==='income'?'Revenu':'D\u00e9pense'};${c};${t.amount.toFixed(2)}\n`;
+  });
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`vault-${m}.csv`;a.click();
+  toast('Export CSV t\u00e9l\u00e9charg\u00e9');haptic();
+};
+
+/* ===== INIT ===== */
+initTheme();
+initForm();
+initRecForm();
+
+(async()=>{
+  if(TOKEN){
+    try{
+      USER=await api.me();
+      await enterApp();
+    }catch(e){
+      logout();
+    }
+  }
+})();
+</script>
+</body>
+</html>
