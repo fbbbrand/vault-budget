@@ -263,7 +263,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- AUTH SCREEN -->
 <div class="auth-screen" id="auth-screen">
   <h2>Vault</h2>
-  <div class="auth-tabs">
+  <div id="auth-welcome" style="display:none;text-align:center;margin-bottom:-8px">
+    <div style="font-size:15px;color:var(--text2);font-weight:500">Bon retour,</div>
+    <div style="font-size:20px;font-weight:800;margin-top:4px" id="auth-welcome-name"></div>
+  </div>
+  <div class="auth-tabs" id="auth-tabs">
     <button class="auth-tab active" data-auth="login">Connexion</button>
     <button class="auth-tab" data-auth="register">Inscription</button>
   </div>
@@ -278,6 +282,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <button class="pin-key" data-k="del"><svg viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button>
   </div>
   <div class="auth-error" id="auth-error"></div>
+  <button id="auth-switch-user" style="display:none;margin-top:4px;background:none;border:none;color:var(--text4);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">Changer de compte</button>
 </div>
 
 <div id="app">
@@ -571,6 +576,47 @@ const api={
 let authMode='login',authPin='';
 const authScreen=document.getElementById('auth-screen');
 
+function setupAuthScreen(){
+  const savedUser=localStorage.getItem('vault_username');
+  const usernameInput=document.getElementById('auth-username');
+  const tabs=document.getElementById('auth-tabs');
+  const welcome=document.getElementById('auth-welcome');
+  const switchBtn=document.getElementById('auth-switch-user');
+  authPin='';updateAuthDots(0);
+  document.getElementById('auth-error').textContent='';
+  if(savedUser){
+    // Returning user — show PIN only
+    usernameInput.value=savedUser;
+    usernameInput.style.display='none';
+    tabs.style.display='none';
+    welcome.style.display='';
+    document.getElementById('auth-welcome-name').textContent=savedUser;
+    document.getElementById('auth-pin-label').textContent='Entrez votre PIN';
+    switchBtn.style.display='';
+    authMode='login';
+  }else{
+    // First time — show full form
+    usernameInput.value='';
+    usernameInput.style.display='';
+    tabs.style.display='';
+    welcome.style.display='none';
+    switchBtn.style.display='none';
+    authMode='login';
+    document.getElementById('auth-pin-label').textContent='Entrez votre PIN';
+  }
+}
+
+document.getElementById('auth-switch-user').onclick=()=>{
+  localStorage.removeItem('vault_username');
+  setupAuthScreen();
+  document.getElementById('auth-username').style.display='';
+  document.getElementById('auth-tabs').style.display='';
+  document.getElementById('auth-welcome').style.display='none';
+  document.getElementById('auth-switch-user').style.display='none';
+  document.getElementById('auth-username').value='';
+  document.getElementById('auth-username').focus();
+};
+
 document.querySelectorAll('.auth-tab').forEach(tab=>{
   tab.onclick=()=>{
     document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
@@ -607,6 +653,7 @@ async function submitAuth(){
     const data=await fn(username,pin);
     TOKEN=data.token;
     localStorage.setItem('vault_token',TOKEN);
+    localStorage.setItem('vault_username',data.user.username);
     USER=data.user;
     errEl.textContent='';
     await enterApp();
@@ -620,12 +667,11 @@ async function submitAuth(){
 function logout(){
   TOKEN=null;USER=null;CURRENT_WALLET=null;WALLETS=[];
   localStorage.removeItem('vault_token');
+  // On garde vault_username pour le reconnexion rapide
   document.getElementById('app').style.display='none';
   document.getElementById('bottom-nav').style.display='none';
   authScreen.classList.remove('hidden');
-  authPin='';updateAuthDots(0);
-  document.getElementById('auth-username').value='';
-  document.getElementById('auth-error').textContent='';
+  setupAuthScreen();
 }
 
 /* ===== APP ENTRY ===== */
@@ -1295,6 +1341,7 @@ document.getElementById('btn-export').onclick=()=>{
 initTheme();
 initForm();
 initRecForm();
+setupAuthScreen();
 
 (async()=>{
   if(TOKEN){
